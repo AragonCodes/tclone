@@ -1,62 +1,60 @@
-import React from 'react'
-const AuthContext = React.createContext()
+import React, { useState } from 'react'
 
-class AuthProvider extends React.Component {
-    state = {
-        isAuthenticated: false,
-        loading: false,
-        user: null,
-    }
-    async logon() {
-        this.setState({ loading: true, error: false });
+const AuthContext = React.createContext()
+const useAuth = () => React.useContext(AuthContext)
+
+const AuthProvider = (props) => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [user, setUser] = useState(null)
+    const [error, setError] = useState(null)
+
+    const logon = async () => {
+        setLoading(true);
+        setError(false);
+
         try {
-            let responce = await fetch('/auth/login');
-            if (responce.status >= 500) {
-                this.setState({ error: true })
+            const res = await fetch('/auth/login');
+            if (res.status >= 500) {
+                throw Error(res.message);
             }
-            if (responce.status >= 400) {
-                this.logout()
+            else if (res.status >= 400) {
+                logout();
             }
-            else if (responce.ok) {
-                let dat = await responce.json();
-                //console.log(dat.message, dat.user)
-                this.login(dat.user)
+            else if (res.ok) {
+                const {user} = await res.json();
+                login(user);
             }
         } catch (error) {
             console.log(error);
-            this.setState({ error: true })
+            setError(error);
         } finally {
-            this.setState({ loading: false })
+            setLoading(false);
         }
     }
-    logon = this.logon.bind(this);
-    login(user) {
-        this.setState({
-            isAuthenticated: true,
-            user
-        })
+
+    const logout = async() => {
+        await fetch('/auth/logout');
+        setIsAuthenticated(false);
+        setUser(null);
     }
-    login = this.login.bind(this)
-    logout() {
-        fetch('/auth/logout')
-        this.setState({
-            isAuthenticated: false,
-            user: null
-        })
+
+    const login = (user) => {
+        setIsAuthenticated(true);
+        setUser(user);
     }
-    logout = this.logout.bind(this)
-    render() {
-        return (
-            <AuthContext.Provider value={{
-                ...this.state,
-                login: this.login,
-                logout: this.logout,
-                logon: this.logon
-            }} {...this.props} />
-        )
-    }
+
+    return (
+        <AuthContext.Provider value={{
+            isAuthenticated,
+            loading,
+            user,
+            error,
+            login,
+            logout,
+            logon
+        }} {...props} />
+    )
 }
-const useAuth = () => React.useContext(AuthContext)
-//for functional components
 
 export { AuthProvider, useAuth, AuthContext }

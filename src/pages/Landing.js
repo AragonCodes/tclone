@@ -14,7 +14,7 @@ class Landing extends React.Component {
             <Router>
                 <div className="Landing">
                     <Navbar />
-                    <content>
+                    <main className="content">
                         <div className="main">
                             <MediaQuery minWidth={850} >
                                 <Explore noSearchBar />
@@ -35,13 +35,12 @@ class Landing extends React.Component {
                                         </MediaQuery>
                                     </Route>
                                     <Route path="/">
-                                        <Redirect to="/" />
                                         <Login />
                                     </Route>
                                 </Switch>
                             </div>
                         </div>
-                    </content>
+                    </main>
                 </div>
             </Router>
         )
